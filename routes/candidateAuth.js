@@ -2,6 +2,7 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const passport = require("passport");
 const { protectCandidate } = require("../middleware/auth");
+const { isProfileComplete } = require("../utils/profileCompletion");
 
 const router = express.Router();
 
@@ -32,6 +33,11 @@ router.get(
 
 // GET /api/auth/me
 router.get("/me", protectCandidate, async (req, res) => {
+  const complete = isProfileComplete(req.user);
+  if (req.user.profileComplete !== complete) {
+    req.user.profileComplete = complete;
+    await req.user.save();
+  }
   res.json({ candidate: req.user });
 });
 
