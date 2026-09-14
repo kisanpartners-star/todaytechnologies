@@ -40,6 +40,7 @@ app.use("/api/jobs", require("./routes/jobs"));
 app.use("/api/applications", require("./routes/applications"));
 app.use("/api/candidates", require("./routes/candidates"));
 app.use("/api/dashboard", require("./routes/dashboard"));
+app.use("/api/technology-clients", require("./routes/technologyClients"));
 
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
