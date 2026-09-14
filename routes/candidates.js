@@ -77,11 +77,11 @@ router.post(
     try {
       const candidate = await Candidate.findById(req.user._id);
       candidate.documents = candidate.documents || {};
-      if (req.files.resume)
+      if (req.files?.resume?.[0])
         candidate.documents.resume = `/uploads/resume/${req.files.resume[0].filename}`;
-      if (req.files.coverLetter)
+      if (req.files?.coverLetter?.[0])
         candidate.documents.coverLetter = `/uploads/coverLetter/${req.files.coverLetter[0].filename}`;
-      if (req.files.idProof)
+      if (req.files?.idProof?.[0])
         candidate.documents.idProof = `/uploads/idProof/${req.files.idProof[0].filename}`;
       candidate.profileComplete = isProfileComplete(candidate);
       await candidate.save();
