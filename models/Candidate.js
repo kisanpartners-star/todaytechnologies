@@ -14,6 +14,58 @@ const candidateSchema = new mongoose.Schema(
     yearsOfExperience: { type: Number, default: 0 },
     profileComplete: { type: Boolean, default: false },
 
+    profileFields: {
+      personal: {
+        dob: String,
+        maritalStatus: String,
+      },
+      education: {
+        highestQual: String,
+        courseDegree: String,
+        otherDegree: String,
+        specialization: String,
+        passedYear: String,
+      },
+      employment: {
+        experienceType: String,
+        fresherCategory: String,
+        fresherRole: String,
+        expSector: String,
+        expIndustry: String,
+        companies: [{
+          companyName: String,
+          designation: String,
+          jobRole: String,
+          stillWorking: String,
+          noticePeriod: String,
+          recentJobLeftDate: String,
+          currentPackage: Number,
+          expectedSalary: Number,
+        }],
+      },
+      location: {
+        currentCity: String,
+        otherCity: String,
+        currentArea: String,
+        preferredLocation: String,
+        relocate: String,
+      },
+      preferences: {
+        employmentType: String,
+        workMode: String,
+        prefDepartment: String,
+        prefRole: String,
+      },
+      links: {
+        linkedin: String,
+        portfolio: String,
+      },
+      declarations: {
+        decl1: Boolean,
+        decl2: Boolean,
+      },
+    },
+
     // ---- Tab 1: Personal Information ----
     personal: {
       dob: { type: Date },

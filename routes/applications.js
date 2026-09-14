@@ -5,6 +5,7 @@ const Job = require("../models/Job");
 const upload = require("../middleware/upload");
 const { protectAdmin, protectCandidate } = require("../middleware/auth");
 const { computeMatchScore } = require("../utils/matchScore");
+const { isProfileComplete } = require("../utils/profileCompletion");
 
 const router = express.Router();
 
@@ -17,6 +18,13 @@ router.post("/:jobId", protectCandidate, upload.single("resume"), async (req, re
     const job = await Job.findById(req.params.jobId);
     if (!job) return res.status(404).json({ message: "Job not found" });
 
+    if (!isProfileComplete(candidate)) {
+      return res.status(403).json({
+        message: "Please complete your profile to 100% before applying.",
+        requiresProfile: true,
+      });
+    }
+
     // Quick-apply data: use body if provided, else fall back to existing profile
     const { name, phone, email, qualification, experienceStatus } = req.body;
 
@@ -25,17 +33,6 @@ router.post("/:jobId", protectCandidate, upload.single("resume"), async (req, re
     if (email) candidate.email = email;
     if (qualification) candidate.qualification = qualification;
     if (experienceStatus) candidate.experienceStatus = experienceStatus;
-
-    const hasRequired = candidate.phone && candidate.email && candidate.qualification;
-    candidate.profileComplete = candidate.profileComplete || !!hasRequired;
-
-    if (!hasRequired) {
-      return res.status(400).json({
-        message:
-          "Please provide phone, email and qualification to complete your quick application.",
-        requiresQuickApply: true,
-      });
-    }
 
     if (req.file) {
       candidate.documents = candidate.documents || {};
