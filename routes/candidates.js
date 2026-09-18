@@ -7,6 +7,29 @@ const { isProfileComplete } = require("../utils/profileCompletion");
 
 const router = express.Router();
 
+// POST /api/candidates/public-profile -> collect a profile without candidate login
+router.post("/public-profile", upload.single("resume"), async (req, res) => {
+  try {
+    const profile = typeof req.body.profile === "string" ? JSON.parse(req.body.profile) : req.body.profile || {};
+    if (!req.file) return res.status(400).json({ message: "Resume is required." });
+    if (!profile.email) return res.status(400).json({ message: "Email ID is required." });
+    const existing = await Candidate.findOne({ email: String(profile.email).toLowerCase() });
+    if (existing) return res.status(409).json({ message: "A profile already exists for this email address." });
+
+    profile.documents = {
+      ...(profile.documents || {}),
+      resume: `/uploads/resume/${req.file.filename}`,
+    };
+    const candidate = new Candidate({ ...profile, email: String(profile.email).toLowerCase() });
+    candidate.qualification = candidate.profileFields?.education?.highestQual || "";
+    candidate.profileComplete = isProfileComplete(candidate);
+    await candidate.save();
+    res.status(201).json({ candidate });
+  } catch (err) {
+    res.status(400).json({ message: err.message || "Could not submit profile." });
+  }
+});
+
 // GET /api/candidates/profile
 router.get("/profile", protectCandidate, async (req, res) => {
   const candidate = await Candidate.findById(req.user._id);
