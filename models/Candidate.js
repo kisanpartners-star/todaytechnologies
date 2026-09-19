@@ -29,9 +29,10 @@ const candidateSchema = new mongoose.Schema(
       employment: {
         experienceType: String,
         fresherCategory: String,
-        fresherRole: String,
+        fresherRole: [String],
         expSector: String,
         expIndustry: String,
+        expRoles: [String],
         companies: [{
           companyName: String,
           designation: String,
