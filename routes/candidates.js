@@ -7,6 +7,13 @@ const { isProfileComplete } = require("../utils/profileCompletion");
 
 const router = express.Router();
 
+function updateProfileCompletion(candidate) {
+  candidate.profileComplete = isProfileComplete(candidate);
+  if (candidate.profileComplete && !candidate.profileSubmittedAt) {
+    candidate.profileSubmittedAt = new Date();
+  }
+}
+
 // POST /api/candidates/public-profile -> collect a profile without candidate login
 router.post("/public-profile", upload.single("resume"), async (req, res) => {
   try {
@@ -22,7 +29,7 @@ router.post("/public-profile", upload.single("resume"), async (req, res) => {
     };
     const candidate = new Candidate({ ...profile, email: String(profile.email).toLowerCase() });
     candidate.qualification = candidate.profileFields?.education?.highestQual || "";
-    candidate.profileComplete = isProfileComplete(candidate);
+    updateProfileCompletion(candidate);
     await candidate.save();
     res.status(201).json({ candidate });
   } catch (err) {
@@ -78,7 +85,7 @@ router.put("/profile", protectCandidate, async (req, res) => {
       runValidators: true,
     });
 
-    candidate.profileComplete = isProfileComplete(candidate);
+    updateProfileCompletion(candidate);
     await candidate.save();
 
     res.json({ candidate });
@@ -106,7 +113,7 @@ router.post(
         candidate.documents.coverLetter = `/uploads/coverLetter/${req.files.coverLetter[0].filename}`;
       if (req.files?.idProof?.[0])
         candidate.documents.idProof = `/uploads/idProof/${req.files.idProof[0].filename}`;
-      candidate.profileComplete = isProfileComplete(candidate);
+      updateProfileCompletion(candidate);
       await candidate.save();
       res.json({ candidate });
     } catch (err) {
@@ -165,12 +172,16 @@ router.get("/admin/all", protectAdmin, async (req, res) => {
       phone,
       experienceType,
       location,
+      submittedFrom,
+      submittedTo,
     } = req.query;
     const query = {};
     if (name) query.name = new RegExp(name, "i");
     if (qualification) query.qualification = new RegExp(qualification, "i");
     if (phone) query.phone = new RegExp(phone, "i");
     if (experience) query.yearsOfExperience = { $gte: Number(experience) };
+    const submittedFromDate = submittedFrom ? new Date(String(submittedFrom)) : null;
+    const submittedToDate = submittedTo ? new Date(String(submittedTo)) : null;
     const candidates = await Candidate.find(query).sort({ createdAt: -1 });
     const filtered = candidates.filter((candidate) => {
       if (!isProfileComplete(candidate)) return false;
@@ -188,7 +199,10 @@ router.get("/admin/all", protectAdmin, async (req, res) => {
       const typeMatches = !experienceType || employment.experienceType === experienceType;
       const locationMatches = !location || [locationFields.currentCity, locationFields.otherCity, locationFields.currentArea, locationFields.preferredLocation, candidate.contact?.city]
         .some((value) => String(value || "").toLowerCase().includes(String(location).toLowerCase()));
-      return salaryMatches && dobMatches && typeMatches && locationMatches;
+      const submittedAt = candidate.profileSubmittedAt ? new Date(candidate.profileSubmittedAt) : null;
+      const submittedFromMatches = !submittedFromDate || (submittedAt && submittedAt >= submittedFromDate);
+      const submittedToMatches = !submittedToDate || (submittedAt && submittedAt <= submittedToDate);
+      return salaryMatches && dobMatches && typeMatches && locationMatches && submittedFromMatches && submittedToMatches;
     });
     const start = (Number(page) - 1) * Number(limit);
     const paginated = filtered.slice(start, start + Number(limit));

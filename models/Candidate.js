@@ -13,6 +13,7 @@ const candidateSchema = new mongoose.Schema(
     experienceStatus: { type: String, enum: ["Fresher", "Experienced", ""], default: "" },
     yearsOfExperience: { type: Number, default: 0 },
     profileComplete: { type: Boolean, default: false },
+    profileSubmittedAt: { type: Date },
 
     profileFields: {
       personal: {
