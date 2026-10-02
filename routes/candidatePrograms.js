@@ -9,8 +9,9 @@ const router = express.Router();
 router.use(protectCandidate);
 
 router.get("/classes/:internId", async (req, res) => {
-  const intern = await Intern.findOne({ internId: req.params.internId.trim(), email: req.user.email.toLowerCase(), status: "active" });
-  if (!intern) return res.status(404).json({ message: "No active intern record matches this ID and your signed-in email." });
+  const intern = await Intern.findOne({ internId: req.params.internId.trim() });
+  if (!intern) return res.status(404).json({ message: "Intern ID not found. Check the ID issued by Today Technologies and try again." });
+  if (intern.status !== "active") return res.status(403).json({ message: "Access for this Intern ID is currently disabled. Please contact Today Technologies." });
   const classes = await InternClass.find({ assignedInterns: intern._id, status: "published" }).sort({ createdAt: -1 });
   res.json({ intern: { internId: intern.internId, name: intern.name }, classes });
 });
