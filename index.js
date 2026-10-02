@@ -23,7 +23,7 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json());
+app.use(express.json({ limit: "20mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 app.use(passport.initialize());
@@ -48,6 +48,8 @@ app.use("/api/candidates", require("./routes/candidates"));
 app.use("/api/dashboard", require("./routes/dashboard"));
 app.use("/api/technology-clients", require("./routes/technologyClients"));
 app.use("/api/internship-applications", require("./routes/internshipApplications"));
+app.use("/api/intern-programs", require("./routes/internPrograms"));
+app.use("/api/candidate-programs", require("./routes/candidatePrograms"));
 
 app.get("/api/health", (req, res) => res.json({ status: "ok" }));
 
